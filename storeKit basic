@@ -1,0 +1,66 @@
+import UIKit
+import StoreKit
+
+class ViewController: UIViewController, SKProductsRequestDelegate,SKPaymentTransactionObserver{
+    
+    static var shared = ViewController()
+    
+    let productID = "com.temporary.id"
+    
+    var activeProduct: SKProduct?
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        SKPaymentQueue.default().add(self)
+        
+//        let productIDs : Set<String> = ["com.temporary.id"]
+//        let productRequest = SKProductsRequest(productIdentifiers: productIDs)
+//        productRequest.delegate = self
+//        productRequest.start()
+    }
+
+    @IBAction func purcased(_ sender: UIButton) {
+        
+        purchaseSubscription()
+    }
+    
+    
+    func purchaseSubscription(){
+        if SKPaymentQueue.canMakePayments(){
+            let paymentRequest = SKMutablePayment()
+            paymentRequest.productIdentifier = productID
+            SKPaymentQueue.default().add(paymentRequest)
+            
+        } else {
+            print("Users can't make payment.")
+        }
+        
+    }
+    
+    
+    func productsRequest(_ request: SKProductsRequest, didReceive response: SKProductsResponse) {
+        print("Loaded Products")
+        
+        for product in response.products{
+            
+            print("Product: \(product.productIdentifier) \(product.localizedTitle) \(product.price.floatValue)")
+            activeProduct = product
+        }
+    }
+    
+    func paymentQueue(_ queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
+        for transaction in transactions {
+            switch (transaction.transactionState){
+            case .purchased:
+                SKPaymentQueue.default().finishTransaction(transaction)
+            case.failed:
+                SKPaymentQueue.default().finishTransaction(transaction)
+            default:
+                break
+            }
+        }
+    }
+    
+    
+}
