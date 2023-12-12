@@ -25,7 +25,7 @@ class ViewController: UIViewController, SKProductsRequestDelegate,SKPaymentTrans
         purchaseSubscription()
     }
     
-    
+    //purchase
     func purchaseSubscription(){
         if SKPaymentQueue.canMakePayments(){
             let paymentRequest = SKMutablePayment()
@@ -38,7 +38,7 @@ class ViewController: UIViewController, SKProductsRequestDelegate,SKPaymentTrans
         
     }
     
-    
+    //request
     func productsRequest(_ request: SKProductsRequest, didReceive response: SKProductsResponse) {
         print("Loaded Products")
         
@@ -48,7 +48,7 @@ class ViewController: UIViewController, SKProductsRequestDelegate,SKPaymentTrans
             activeProduct = product
         }
     }
-    
+    //transaction
     func paymentQueue(_ queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
         for transaction in transactions {
             switch (transaction.transactionState){
@@ -61,6 +61,59 @@ class ViewController: UIViewController, SKProductsRequestDelegate,SKPaymentTrans
             }
         }
     }
+    //verify receipt info
+    func verifyReceipt(){
+        
+        if let appStoreReceiptURL = Bundle.main.appStoreReceiptURL,
+           FileManager.default.fileExists(atPath: appStoreReceiptURL.path)
+        {
+            do {
+                let receiptData = try Data(contentsOf: appStoreReceiptURL)
+                let receiptBase64 = receiptData.base64EncodedString(options: [])
+                
+                sendReceipt(receiptBase64)
+                
+            } catch {
+                print("Error loading receipt data...")
+            }
+        }
+    }
+   
     
+    func sendReceipt(_ receiptBase64:String){
+        
+        let url = URL(string: "https://sandbox.itunes.apple.com/verifyReceipt")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        let body = [
+            "receipt-data":receiptBase64,
+            "password":""
+        ]
+
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
+        } catch {
+            print("Error creating JSON Data...",error)
+            return
+        }
+        
+        URLSession.shared.dataTask(with: request) { data, response,error in
+            guard let data = data, error == nil else {
+                    print("Receipt validation is failed...")
+                    return
+            }
+            do {
+                let jsonResponse = try JSONSerialization.jsonObject(with: data,options: [])
+                as?[String:Any]
+                print("Receipt Validation is successful. Response: \(jsonResponse ?? [:])")
+                
+            } catch {
+                print("Error JSON Response...",error)
+            }
+        }.resume()
+        
+    }
+
     
 }
