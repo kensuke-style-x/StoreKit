@@ -18,8 +18,12 @@ class ViewController: UIViewController, SKProductsRequestDelegate,SKPaymentTrans
 //        let productRequest = SKProductsRequest(productIdentifiers: productIDs)
 //        productRequest.delegate = self
 //        productRequest.start()
-    }
 
+        //isPurchased()
+      if isPurchased(){
+     
+        }
+    }
     @IBAction func purcased(_ sender: UIButton) {
         
         purchaseSubscription()
@@ -53,7 +57,11 @@ class ViewController: UIViewController, SKProductsRequestDelegate,SKPaymentTrans
         for transaction in transactions {
             switch (transaction.transactionState){
             case .purchased:
+
+                UserDefaults.standard.set(true, forKey: productID)
+                verifyReceipt()
                 SKPaymentQueue.default().finishTransaction(transaction)
+               
             case.failed:
                 SKPaymentQueue.default().finishTransaction(transaction)
             default:
@@ -114,6 +122,16 @@ class ViewController: UIViewController, SKProductsRequestDelegate,SKPaymentTrans
         }.resume()
         
     }
+//isPurchased
+  func isPurchased()->Bool{
+        let purchaseStatus = UserDefaults.standard.bool(forKey: productID)
+        if purchaseStatus == true{
+            return true
+        } else {
+            return false
+        }
+    }
+    
 
     
 }
