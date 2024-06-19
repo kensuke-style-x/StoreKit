@@ -1,0 +1,73 @@
+import UIKit
+import StoreKit
+
+class StoreManager: NSObject{
+    
+    static let shared = StoreManager()
+    
+    var products: [Product] = []
+    
+    //fetch product id
+    func fetchProducts(completion:@escaping([Product]) -> Void) {
+        
+        Task{
+            do {
+                let storeProducts = try await Product.products(for: ["storekit2.com"])
+                
+                DispatchQueue.main.async {
+                    
+                    self.products = storeProducts
+                    
+                    completion(storeProducts)
+                }
+            } catch {
+                print("fetch product id is failure...")
+                
+                completion([])
+            }
+        }
+    }
+    
+    //purchase product
+    
+    func purchaseProduct(_ product: Product,completion: @escaping (Result<Transaction,Error>)->Void){
+        
+        Task{
+            do {
+                let result = try await product.purchase()
+                
+                switch result {
+                    
+                case .success(let verification):
+                    switch verification{
+                        
+                    case .verified(let transaction):
+                        //handle success proceed
+                        await transaction.finish()
+                        
+                        completion(.success(transaction))
+                        
+                    case .unverified(_, let error):
+                        //handle failure proceed
+                        completion(.failure(error))
+                    }
+                    //if user cancel
+                case .userCancelled:
+                    
+                    completion(.failure(NSError(domain: "UserCancelled", code: 0, userInfo: nil)))
+                    
+                case .pending:
+                    
+                    completion(.failure(NSError(domain: "PendingTransaction", code: 0, userInfo: nil)))
+                    
+                @unknown default:break
+                }
+            } catch {
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    
+    
+}
