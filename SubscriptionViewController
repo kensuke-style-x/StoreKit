@@ -1,0 +1,124 @@
+import UIKit
+import StoreKit
+
+
+
+class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource{
+    
+    
+    private let storeManager = StoreManager.shared
+    
+    private var products: [Product] = []
+    
+    private var tableView:UITableView!
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        self.title = "Subscription"
+        
+        tableView = UITableView(frame: self.view.bounds, style: .plain)
+        tableView.dataSource = self
+        tableView.delegate = self
+        
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
+        view.addSubview(tableView)
+        
+        storeManager.fetchProducts{ products in
+            self.products = products
+            self.tableView.reloadData()
+        }
+        
+        //Restore button
+        
+        let restoreButton = UIBarButtonItem(title: "Restore", style: .plain, target: self, action: #selector(restorePurchases))
+        
+//        let entitlementButton = UIBarButtonItem(title: "Entitlement", style: .plain, target: self, action: #selector(fetchEntitlement))
+                                            
+        navigationItem.rightBarButtonItem = restoreButton
+        
+//        navigationItem.leftBarButtonItem = entitlementButton
+        
+        
+    }
+    //restore
+   @objc func restorePurchases() {
+       
+       Task{
+           do {
+               try await AppStore.sync()
+               
+           } catch {
+               print(error)
+           }
+       }
+    }
+    
+    
+    //tableView
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return products.count
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
+        let product = products[indexPath.row]
+        cell.textLabel?.text = product.displayName
+        cell.detailTextLabel?.text = product.description
+        
+        return cell
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        
+        let product = products[indexPath.row]
+        
+        displaySubscriptionInfo(for: product)
+        
+        storeManager.purchaseProduct(product){
+            result in
+            
+            switch result {
+            case .success(let transaction):
+                //handle success proceed
+                print("purchase transaxtion is \(transaction)")
+            case .failure(let error):
+                //handle failure proceed
+                print("purchase transaction is \(error)")
+                
+            }
+        }
+    }
+    
+    
+    
+    //display
+    
+    func displaySubscriptionInfo(for product:Product){
+        
+        guard let subscription = product.subscription
+        else {
+            print("Product is not a subscription...")
+            return
+        }
+        
+        //fetch subscription details
+        let subscriptionInfoPeriod = subscription.subscriptionPeriod
+        
+        let introductoryOfferPeriod = subscription.introductoryOffer!.period
+        
+        let alertController = UIAlertController(title: product.displayName, message: "Period :\(subscriptionInfoPeriod) introductory offer :\(String(describing: introductoryOfferPeriod))", preferredStyle: .alert)
+
+        let dismissAction = UIAlertAction(title: "OK", style: .default, handler: nil)
+        
+        alertController.addAction(dismissAction)
+        
+        present(alertController,animated: true)
+        
+    }
+    
+    
+
+
+}
+
