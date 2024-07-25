@@ -1,5 +1,7 @@
 import UIKit
 import StoreKit
+import SafariServices
+
 
 
 class ViewController: UIViewController {
@@ -7,6 +9,8 @@ class ViewController: UIViewController {
     @IBAction func reviewRequestButtonTapped(_ sender: Any) {
         
                 reviewRequest()
+    
+                manualRequest() //safari services 
         
     }
     
@@ -24,4 +28,24 @@ class ViewController: UIViewController {
         }
         
     }
+
+     private func manualRequest(){
+        
+         let reviewRequestURL =  "https://apps.apple.com/app/id(Your App ID Number)?action=write-review"
+        
+         guard let writeReviewURL = URL(string: reviewRequestURL) else {
+                        fatalError("Expected a valid URL")
+                    }
+            
+       if UIApplication.shared.canOpenURL(writeReviewURL){
+           
+           UIApplication.shared.open(writeReviewURL,options: [:],completionHandler: nil)
+        }
+        
+        
+        
+    }
+
+}
+
     
