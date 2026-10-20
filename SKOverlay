@@ -1,0 +1,25 @@
+import UIKit
+import StoreKit
+
+class ViewController: UIViewController {
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        // Do any additional setup after loading the view.
+        displayOverlay()
+    }
+
+    func displayOverlay(){
+        
+        guard let scene = view.window?.windowScene else {
+            return
+        }
+        
+        let config = SKOverlay.AppConfiguration(appIdentifier: "", position: .bottom)
+        
+        let overlay = SKOverlay(configuration: config)
+        
+        overlay.present(in:scene)
+        
+    }
+}
