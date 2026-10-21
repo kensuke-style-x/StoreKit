@@ -1,0 +1,36 @@
+import UIKit
+import StoreKit
+
+class ViewController: UIViewController,SKStoreProductViewControllerDelegate{
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        // Do any additional setup after loading the view.
+        
+        displayStoreViewController()
+    }
+
+
+//SKStoreProductViewController
+
+    func displayStoreViewController(){
+        
+        let storeViewController = SKStoreProductViewController()
+        storeViewController.delegate = self
+        
+        let parameters: [String:Any] = [
+            SKStoreProductParameterITunesItemIdentifier: NSNumber(value: 123456789)
+        ]
+        
+        storeViewController.loadProduct(withParameters: parameters){[weak self]loaded,error in
+            
+            if loaded{
+                self?.present(storeViewController,animated: true)
+            } else {
+                print("\(error!.localizedDescription)")
+            }
+        }
+        
+    }
+    
+    
